@@ -1,53 +1,141 @@
-require "./game.rb"
-require "./player.rb"
-require "./board.rb"
+class TicTacToe
 
-module TicTacToe
-  class TicTacToeRunner
-    attr_accessor :name1, :name2, :game_data
+  WIN_COMBINATIONS = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [6, 4, 2]
+  ]
 
-    def initialize
-      welcome_screen
-      game_loop
+def initialize
+  @board = Array.new(9, " ")
+end
+
+def display_board
+  puts " #{@board[0]} | #{@board[1]} | #{@board[2]} "
+  puts "-----------"
+  puts " #{@board[3]} | #{@board[4]} | #{@board[5]} "
+  puts "-----------"
+  puts " #{@board[6]} | #{@board[7]} | #{@board[8]} "
+end
+
+def input_to_index(user_input)
+  user_input.to_i - 1
+end
+
+def move(index, current_player = "X")
+  @board[index] = current_player
+end
+
+def position_taken?(index)
+  !(@board[index].nil? || @board[index] == " ")
+end
+
+def valid_move?(index)
+  index.between?(0,8) && !position_taken?(index)
+end
+
+def turn_count
+  turn = 0
+  @board.each do |index|
+    if index == "X" || index == "O"
+      turn += 1
     end
+  end
+  return turn
+end
 
-    def welcome_screen #greets players, asks for names
-      puts "|| Welcome to Tic Tac Toe! ||"
-      puts "||-------------------------||\n\n\n"
-      print "Enter Player 1's name: "
-      @name1 = gets.chomp
-      puts " "
-      print "Enter Player 2's name: "
-      @name2 = gets.chomp
-      puts " "
+def current_player
+  #if the turn count is an even number, that means O just went, so the next/current player is X
+  num_turns = turn_count
+  if num_turns % 2 == 0
+    player = "X"
+  else
+    player = "O"
+  end
+  return player
+end
+
+def turn
+  puts "Please choose a number 1-9:"
+  user_input = gets.chomp
+  index = input_to_index(user_input)
+  if valid_move?(index)
+    player_token = current_player
+    move(index, player_token)
+    display_board
+  else
+    turn
+  end
+end
+
+def won?
+  WIN_COMBINATIONS.each {|win_combo|
+    index_0 = win_combo[0]
+    index_1 = win_combo[1]
+    index_2 = win_combo[2]
+
+    position_1 = @board[index_0]
+    position_2 = @board[index_1]
+    position_3 = @board[index_2]
+
+    if position_1 == "X" && position_2 == "X" && position_3 == "X"
+      return win_combo
+    elsif position_1 == "O" && position_2 == "O" && position_3 == "O"
+      return win_combo
     end
+  }
+  return false
+end
 
-    def game_loop #loops between running the game and asking if user wants to play again
-      game_start
-      play_again
-    end
+def full?
+  @board.all? {|index| index == "X" || index == "O"}
+end
 
-    def game_start #creates and runs a game
-      board = Board.new
-      player1, player2 = Player.new(@name1), Player.new(@name2)
-      game = Game.new(player1, player2, board)
-    end
+def draw?
+  if !won? && full?
+    return true
+  else
+    return false
+  end
+end
 
+def over?
+  if won? || draw?
+    return true
+  else
+    return false
+  end
+end
 
-    def play_again #asks user if they want to play again
-      input = nil
-      until input == "Y" or input == "N"
-        puts "Would you like to play again? (Y/N): "
-        input = gets.chomp.upcase
-      end
-      case input
-      when "Y"
-        game_start
-      when "N"
-        puts "Thank you for playing!"
-      end
+def winner
+  index = []
+  index = won?
+  if index == false
+    return nil
+  else
+    if @board[index[0]] == "X"
+      return "X"
+    else
+      return "O"
     end
   end
 end
 
-TicTacToeRunner.new
+def play
+  until over? == true
+    turn
+  end
+
+  if won?
+    puts "Congratulations #{winner}!"
+  elsif draw?
+    puts "Cat's Game!"
+  end
+end
+
+end
